@@ -39,11 +39,8 @@ class LearningAgent(Agent):
         self.state = (inputs['light'], inputs['oncoming'], inputs['left'], self.next_waypoint)
                     
         # TODO: Select action according to your policy
-        #action = random.choice(self.env.valid_actions)
-        #print self.state
+
         action = self.selectBestAction(epsilon = 0.1)
-        #print "table values: ", self.qLearnTable[self.state]
-        #print "action choosen: ",self.env.valid_actions.index(action), action
         
         # Execute action and get reward
         reward = self.env.act(self, action)
@@ -51,8 +48,7 @@ class LearningAgent(Agent):
             self.timesSuccess += 1
 
         # TODO: Learn policy based on state, action, reward
-        #self.qLearnTable[self.state][self.env.valid_actions.index(action)] = reward
-        
+       
         if self.prevState != None:
             qMax = max(self.qLearnTable[self.state])
             prevQ = self.qLearnTable[self.prevState][self.prevActionIndex] 
@@ -76,7 +72,6 @@ class LearningAgent(Agent):
             
         if random.random() < epsilon:
             # explore by choosing a random action
-            #print 'random action'
             return random.choice(self.env.valid_actions)
         
         # find the best action for current state

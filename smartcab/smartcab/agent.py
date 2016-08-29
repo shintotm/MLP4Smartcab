@@ -12,10 +12,22 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         self.timesSuccess = 0
+        self.qLearnTable = {}
+        self.prevActionIndex = None
+        self.prevReward = 0
+        self.prevState = None
+        
+        self.alpha = 0.2
+        self.gamma = 0.9
+
+        
         
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+        self.prevActionIndex = None
+        self.prevReward = 0
+        self.prevState = None
 
     def update(self, t):
         # Gather inputs
@@ -24,19 +36,55 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        
+        self.state = (inputs['light'], inputs['oncoming'], inputs['left'], self.next_waypoint)
+                    
         # TODO: Select action according to your policy
-        action = random.choice(self.env.valid_actions)
-
+        #action = random.choice(self.env.valid_actions)
+        #print self.state
+        action = self.selectBestAction(epsilon = 0.1)
+        #print "table values: ", self.qLearnTable[self.state]
+        #print "action choosen: ",self.env.valid_actions.index(action), action
+        
         # Execute action and get reward
         reward = self.env.act(self, action)
         if reward == 12:
             self.timesSuccess += 1
 
         # TODO: Learn policy based on state, action, reward
+        #self.qLearnTable[self.state][self.env.valid_actions.index(action)] = reward
+        
+        if self.prevState != None:
+            qMax = max(self.qLearnTable[self.state])
+            prevQ = self.qLearnTable[self.prevState][self.prevActionIndex] 
+            newQ = prevQ + self.alpha *(self.prevReward + self.gamma * (qMax - prevQ))
+            self.qLearnTable[self.prevState][self.prevActionIndex] = newQ
+            #print 'prevQ:', prevQ, 'newQ: ', newQ
+            
+        self.prevState = self.state
+        self.prevActionIndex = self.env.valid_actions.index(action)
+        self.prevReward = reward
+        
 
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
-
+        #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        
+    def selectBestAction(self, epsilon):
+        if self.state not in self.qLearnTable.keys():
+            # new state, initialize to zero
+            self.qLearnTable[self.state] = [0,0,0,0]
+            #choose a random action
+            return random.choice(self.env.valid_actions)
+            
+        if random.random() < epsilon:
+            # explore by choosing a random action
+            #print 'random action'
+            return random.choice(self.env.valid_actions)
+        
+        # find the best action for current state
+        maxQ = max(self.qLearnTable[self.state])
+        index = self.qLearnTable[self.state].index(maxQ)
+        return self.env.valid_actions[index]
+    
+    
 
 def run():
     """Run the agent for a finite number of trials."""

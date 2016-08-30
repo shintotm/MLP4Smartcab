@@ -19,6 +19,7 @@ class LearningAgent(Agent):
         
         self.alpha = 0.2
         self.gamma = 0.9
+        self.epsilon = 1
 
         
         
@@ -28,6 +29,7 @@ class LearningAgent(Agent):
         self.prevActionIndex = None
         self.prevReward = 0
         self.prevState = None
+        print 'epsilon', self.epsilon
 
     def update(self, t):
         # Gather inputs
@@ -40,7 +42,7 @@ class LearningAgent(Agent):
                     
         # TODO: Select action according to your policy
 
-        action = self.selectBestAction(epsilon = 0.1)
+        action = self.selectBestAction()
         
         # Execute action and get reward
         reward = self.env.act(self, action)
@@ -63,14 +65,16 @@ class LearningAgent(Agent):
 
         #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
         
-    def selectBestAction(self, epsilon):
+    def selectBestAction(self):
+        self.epsilon *= 0.99 # epsilon decays over time
+        #print self.epsilon
         if self.state not in self.qLearnTable.keys():
             # new state, initialize to zero
             self.qLearnTable[self.state] = [0,0,0,0]
             #choose a random action
             return random.choice(self.env.valid_actions)
             
-        if random.random() < epsilon:
+        if random.random() < self.epsilon:
             # explore by choosing a random action
             return random.choice(self.env.valid_actions)
         

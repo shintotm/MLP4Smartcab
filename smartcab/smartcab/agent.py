@@ -11,10 +11,17 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
+        self.success = 0
+        self.penalties = []
+        self.penalties_per_trial = 0
+        
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+        print "penalty per trial", self.penalties_per_trial
+        self.penalties.append(self.penalties_per_trial)
+        self.penalties_per_trial = 0 
 
     def update(self, t):
         # Gather inputs
@@ -25,14 +32,21 @@ class LearningAgent(Agent):
         # TODO: Update state
         
         # TODO: Select action according to your policy
-        action = None
+        action = random.choice(self.env.valid_actions)
 
         # Execute action and get reward
         reward = self.env.act(self, action)
+        if reward < 0:
+            #self.total_penalties += reward
+            self.penalties_per_trial += reward
+
 
         # TODO: Learn policy based on state, action, reward
 
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        if self.planner.next_waypoint() == None:
+            print "Next waypoint:",  "reward: ", reward
+            self.success += 1
 
 
 def run():
@@ -45,11 +59,20 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0.0005, display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+    print "Success: ", a.success
+
+    import matplotlib.pyplot as plt
+    plt.plot(a.penalties, color='r')
+    plt.xlabel('Trials')
+    plt.ylabel('Penalties')
+    plt.title('Random actions. Success rate %d%%' % a.success)
+    #plt.show()
+    plt.savefig('radomAction.png')
 
 
 if __name__ == '__main__':

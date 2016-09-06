@@ -11,25 +11,10 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
-        self.timesSuccess = 0
-        self.qLearnTable = {}
-        self.prevActionIndex = None
-        self.prevReward = 0
-        self.prevState = None
-        
-        self.alpha = 0.2
-        self.gamma = 0.9
-        self.epsilon = 1
 
-        
-        
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
-        self.prevActionIndex = None
-        self.prevReward = 0
-        self.prevState = None
-        print 'epsilon', self.epsilon
 
     def update(self, t):
         # Gather inputs
@@ -38,52 +23,17 @@ class LearningAgent(Agent):
         deadline = self.env.get_deadline(self)
 
         # TODO: Update state
-        self.state = (inputs['light'], inputs['oncoming'], inputs['left'], self.next_waypoint)
-                    
-        # TODO: Select action according to your policy
-
-        action = self.selectBestAction()
         
+        # TODO: Select action according to your policy
+        action = None
+
         # Execute action and get reward
         reward = self.env.act(self, action)
-        if reward == 12:
-            self.timesSuccess += 1
 
         # TODO: Learn policy based on state, action, reward
-       
-        if self.prevState != None:
-            qMax = max(self.qLearnTable[self.state])
-            prevQ = self.qLearnTable[self.prevState][self.prevActionIndex] 
-            newQ = prevQ + self.alpha *(self.prevReward + self.gamma * (qMax - prevQ))
-            self.qLearnTable[self.prevState][self.prevActionIndex] = newQ
-            #print 'prevQ:', prevQ, 'newQ: ', newQ
-            
-        self.prevState = self.state
-        self.prevActionIndex = self.env.valid_actions.index(action)
-        self.prevReward = reward
-        
 
-        #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
-        
-    def selectBestAction(self):
-        self.epsilon *= 0.99 # epsilon decays over time
-        #print self.epsilon
-        if self.state not in self.qLearnTable.keys():
-            # new state, initialize to zero
-            self.qLearnTable[self.state] = [0,0,0,0]
-            #choose a random action
-            return random.choice(self.env.valid_actions)
-            
-        if random.random() < self.epsilon:
-            # explore by choosing a random action
-            return random.choice(self.env.valid_actions)
-        
-        # find the best action for current state
-        maxQ = max(self.qLearnTable[self.state])
-        index = self.qLearnTable[self.state].index(maxQ)
-        return self.env.valid_actions[index]
-    
-    
+        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+
 
 def run():
     """Run the agent for a finite number of trials."""
@@ -95,12 +45,12 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.005, display=True)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-    print 'Number of times reached destination: ', a.timesSuccess
+
 
 if __name__ == '__main__':
     run()

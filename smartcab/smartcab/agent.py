@@ -74,7 +74,7 @@ def run():
     plt.xlabel('Trials')
     
     plt.title('Random actions, no deadline. Success rate %d%%' % a.success)
-    plt.show()
+    #plt.show()
     plt.savefig('radomAction.png')
 
 

@@ -12,16 +12,19 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         self.success = 0
-        self.penalties = []
-        self.penalties_per_trial = 0
+        self.red_light_violations = []
+        self.planner_noncompliance = []
+        self.positive_rewards = []
         
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
-        print "penalty per trial", self.penalties_per_trial
-        self.penalties.append(self.penalties_per_trial)
-        self.penalties_per_trial = 0 
+       
+        self.red_light_violations.append(0)
+        self.planner_noncompliance.append(0)
+        self.positive_rewards.append(0)
+
 
     def update(self, t):
         # Gather inputs
@@ -36,17 +39,20 @@ class LearningAgent(Agent):
 
         # Execute action and get reward
         reward = self.env.act(self, action)
-        if reward < 0:
-            #self.total_penalties += reward
-            self.penalties_per_trial += reward
+        if reward == -1.0:
+            self.red_light_violations[len(self.red_light_violations) - 1] += 1
+        elif reward == -0.5:
+            self.planner_noncompliance[len(self.planner_noncompliance) - 1] += 1
+        elif reward > 0:
+            self.positive_rewards[len(self.positive_rewards) - 1] += 1
 
 
         # TODO: Learn policy based on state, action, reward
 
         #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
-        if self.planner.next_waypoint() == None:
-            print "Next waypoint:",  "reward: ", reward
-            self.success += 1
+ 
+        if self.planner.next_waypoint() == None :
+             self.success += 1
 
 
 def run():
@@ -55,7 +61,7 @@ def run():
     # Set up environment and agent
     e = Environment()  # create environment (also adds some dummy traffic)
     a = e.create_agent(LearningAgent)  # create agent
-    e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+    e.set_primary_agent(a, enforce_deadline=False)  # specify agent to track
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
@@ -67,10 +73,13 @@ def run():
     print "Success: ", a.success
 
     import matplotlib.pyplot as plt
-    plt.plot(a.penalties, color='r')
+    plt.plot(a.red_light_violations, label='red light violations', color='r')
+    plt.plot(a.planner_noncompliance, label = 'planner noncompliance', color='b')
+    plt.plot(a.positive_rewards, color='g', label = 'positive rewards')
+    plt.legend()
     plt.xlabel('Trials')
-    plt.ylabel('Penalties')
-    plt.title('Random actions. Success rate %d%%' % a.success)
+    
+    plt.title('Random actions, no deadline. Success rate %d%%' % a.success)
     #plt.show()
     plt.savefig('radomAction.png')
 

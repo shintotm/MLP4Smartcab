@@ -101,7 +101,7 @@ def run():
     # Set up environment and agent
     e = Environment()  # create environment (also adds some dummy traffic)
     a = e.create_agent(LearningAgent)  # create agent
-    e.set_primary_agent(a, enforce_deadline=False)  # specify agent to track
+    e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
@@ -119,9 +119,9 @@ def run():
     plt.legend()
     plt.xlabel('Trials')
     
-    plt.title('Q-Learning, no deadline. Success rate %d%%' % a.success)
+    plt.title('Q-Learning, with deadline. Success rate %d%%' % a.success)
     #plt.show()
-    plt.savefig('QLearning.png')
+    plt.savefig('QLearningWithDeadline.png')
 
 
 

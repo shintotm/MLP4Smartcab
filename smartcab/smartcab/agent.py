@@ -14,7 +14,6 @@ class LearningAgent(Agent):
         self.success = 0
         self.red_light_violations = []
         self.planner_noncompliance = []
-        self.positive_rewards = []
         
 
     def reset(self, destination=None):
@@ -23,7 +22,6 @@ class LearningAgent(Agent):
        
         self.red_light_violations.append(0)
         self.planner_noncompliance.append(0)
-        self.positive_rewards.append(0)
 
 
     def update(self, t):
@@ -43,9 +41,6 @@ class LearningAgent(Agent):
             self.red_light_violations[len(self.red_light_violations) - 1] += 1
         elif reward == -0.5:
             self.planner_noncompliance[len(self.planner_noncompliance) - 1] += 1
-        elif reward > 0:
-            self.positive_rewards[len(self.positive_rewards) - 1] += 1
-
 
         # TODO: Learn policy based on state, action, reward
 
@@ -75,12 +70,11 @@ def run():
     import matplotlib.pyplot as plt
     plt.plot(a.red_light_violations, label='red light violations', color='r')
     plt.plot(a.planner_noncompliance, label = 'planner noncompliance', color='b')
-    plt.plot(a.positive_rewards, color='g', label = 'positive rewards')
     plt.legend()
     plt.xlabel('Trials')
     
     plt.title('Random actions, no deadline. Success rate %d%%' % a.success)
-    #plt.show()
+    plt.show()
     plt.savefig('radomAction.png')
 
 

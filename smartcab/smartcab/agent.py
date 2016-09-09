@@ -98,30 +98,59 @@ class LearningAgent(Agent):
 def run():
     """Run the agent for a finite number of trials."""
 
-    # Set up environment and agent
-    e = Environment()  # create environment (also adds some dummy traffic)
-    a = e.create_agent(LearningAgent)  # create agent
-    e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
-    # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
+    max_result = 0
+    best_alpha = 0
+    best_gamma = 0
 
-    # Now simulate it
-    sim = Simulator(e, update_delay=0.0005, display=False)  # create simulator (uses pygame when display=True, if available)
-    # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+    gammas = []
+    gammas.append(1)
+    for g in range(100):
+        gammas.append(gammas[-1] * 0.96)
 
-    sim.run(n_trials=100)  # run for a specified number of trials
-    # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-    print "Success: ", a.success
-
-    import matplotlib.pyplot as plt
-    plt.plot(a.red_light_violations, label='red light violations', color='r')
-    plt.plot(a.planner_noncompliance, label = 'planner noncompliance', color='b')
+        alphas = []
+    alphas.append(1)
+    for a in range(100):
+        alphas.append(alphas[-1] * 0.96)
     
-    plt.legend()
-    plt.xlabel('Trials')
-    
-    plt.title('Q-Learning, with deadline. Success rate %d%%' % a.success)
+    import time
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    filename = 'gridsearch_'+timestr +'.log'    
+    for alpha in alphas:
+
+        for gamma in gammas:
+
+            # Set up environment and agent
+            e = Environment()  # create environment (also adds some dummy traffic)
+            a = e.create_agent(LearningAgent)  # create agent
+            a.alpha = alpha
+            a.gamma = gamma
+            e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+            # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
+
+            # Now simulate it
+            sim = Simulator(e, update_delay=0.000005, display=False)  # create simulator (uses pygame when display=True, if available)
+            # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+
+            sim.run(n_trials=100)  # run for a specified number of trials
+            # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+            print "Success: ", a.success, alpha, gamma
+            with open(filename, 'a') as logfile:
+                logfile.write("%d %.4f %.4f\n" % (a.success, alpha, gamma) )
+            if a.success > max_result:
+                max_result = a.success
+                best_alpha = alpha
+                best_gamma = gamma
+                print max_result, alpha, gamma
+
+    print 'best success rate:',max_result, ' alpha: ', best_alpha, ' gamma: ', best_gamma
+    #import matplotlib.pyplot as plt
+    #plt.plot(a.red_light_violations, label='red light violations', color='r')
+    #plt.plot(a.planner_noncompliance, label = 'planner noncompliance', color='b')
+    #plt.legend()
+    #plt.xlabel('Trials')
+    #plt.title('Q-Learning, with deadline. Success rate %d%%' % a.success)
     #plt.show()
-    plt.savefig('QLearningWithDeadline.png')
+    #plt.savefig('QLearningWithDeadline.png')
 
 
 

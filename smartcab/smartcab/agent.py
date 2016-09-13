@@ -97,35 +97,35 @@ class LearningAgent(Agent):
 
 def run():
     """Run the agent for a finite number of trials."""
-    import matplotlib.pyplot as plt
-    import time
-    for count in range(10):
-        # Set up environment and agent
-        e = Environment()  # create environment (also adds some dummy traffic)
-        a = e.create_agent(LearningAgent)  # create agent
-        e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
-        # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
+    #import matplotlib.pyplot as plt
+    #import time
 
-        # Now simulate it
-        sim = Simulator(e, update_delay=0.000005, display=False)  # create simulator (uses pygame when display=True, if available)
-        # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+    # Set up environment and agent
+    e = Environment()  # create environment (also adds some dummy traffic)
+    a = e.create_agent(LearningAgent)  # create agent
+    e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+    # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
-        sim.run(n_trials=100)  # run for a specified number of trials
-        # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-      
-        
-        plt.plot(a.red_light_violations, label='red light violations', color='r')
-        plt.plot(a.planner_noncompliance, label = 'planner noncompliance', color='b')
-        plt.legend()
-        plt.xlabel('Trials')
-        plt.title('Enhanced Q-Learning, with deadline. Success rate %d%%' % a.success_rate)
-        y_pos = max(a.red_light_violations + a.planner_noncompliance)*0.8
-        plt.text(50, y_pos, r'$\alpha: %.3f, \gamma: %.3f$' % (a.alpha, a.gamma))
-        #plt.show()
-        
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        plt.savefig('EnhancedQLearningWithDeadline_'+timestr +'_%d_%d.png' % (count, a.success_rate))
-        plt.clf()
+    # Now simulate it
+    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
+    # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+
+    sim.run(n_trials=100)  # run for a specified number of trials
+    # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+  
+    
+    #plt.plot(a.red_light_violations, label='red light violations', color='r')
+    #plt.plot(a.planner_noncompliance, label = 'planner noncompliance', color='b')
+    #plt.legend()
+    #plt.xlabel('Trials')
+    #plt.title('Enhanced Q-Learning, with deadline. Success rate %d%%' % a.success_rate)
+    #y_pos = max(a.red_light_violations + a.planner_noncompliance)*0.8
+    #plt.text(50, y_pos, r'$\alpha: %.3f, \gamma: %.3f$' % (a.alpha, a.gamma))
+    #plt.show()
+    
+    #timestr = time.strftime("%Y%m%d-%H%M%S")
+    #plt.savefig('EnhancedQLearningWithDeadline_'+timestr +'_%d.png' % (a.success_rate))
+    #plt.clf()
 
 
 

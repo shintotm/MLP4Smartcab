@@ -11,7 +11,7 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
-        self.success = 0
+        self.success_rate = 0
         self.red_light_violations = []
         self.planner_noncompliance = []
         
@@ -20,7 +20,7 @@ class LearningAgent(Agent):
         self.prevReward = 0
         self.prevState = None
         
-        self.alpha = 0.5
+        self.alpha = 0.1
         self.gamma = 0.1
         self.epsilon = 1
         
@@ -35,7 +35,7 @@ class LearningAgent(Agent):
         self.prevActionIndex = None
         self.prevReward = 0
         self.prevState = None
-
+        self.epsilon *= 0.9
 
     def update(self, t):
         # Gather inputs
@@ -75,10 +75,10 @@ class LearningAgent(Agent):
         #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
  
         if self.planner.next_waypoint() == None :
-             self.success += 1
+             self.success_rate += 1
 
     def selectBestAction(self):
-        self.epsilon = self.epsilon * 0.999
+        #self.epsilon = self.epsilon * 0.999
         #print self.epsilon
         if self.state not in self.qLearnTable.keys():
             # new state, initialize to zero
@@ -97,60 +97,35 @@ class LearningAgent(Agent):
 
 def run():
     """Run the agent for a finite number of trials."""
-
-    max_result = 0
-    best_alpha = 0
-    best_gamma = 0
-
-    gammas = []
-    gammas.append(1)
-    for g in range(100):
-        gammas.append(gammas[-1] * 0.96)
-
-        alphas = []
-    alphas.append(1)
-    for a in range(100):
-        alphas.append(alphas[-1] * 0.96)
-    
+    import matplotlib.pyplot as plt
     import time
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    filename = 'gridsearch_'+timestr +'.log'    
-    for alpha in alphas:
+    for count in range(10):
+        # Set up environment and agent
+        e = Environment()  # create environment (also adds some dummy traffic)
+        a = e.create_agent(LearningAgent)  # create agent
+        e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+        # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
-        for gamma in gammas:
+        # Now simulate it
+        sim = Simulator(e, update_delay=0.000005, display=False)  # create simulator (uses pygame when display=True, if available)
+        # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
-            # Set up environment and agent
-            e = Environment()  # create environment (also adds some dummy traffic)
-            a = e.create_agent(LearningAgent)  # create agent
-            a.alpha = alpha
-            a.gamma = gamma
-            e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
-            # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
-
-            # Now simulate it
-            sim = Simulator(e, update_delay=0.000005, display=False)  # create simulator (uses pygame when display=True, if available)
-            # NOTE: To speed up simulation, reduce update_delay and/or set display=False
-
-            sim.run(n_trials=100)  # run for a specified number of trials
-            # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-            print "Success: ", a.success, alpha, gamma
-            with open(filename, 'a') as logfile:
-                logfile.write("%d %.4f %.4f\n" % (a.success, alpha, gamma) )
-            if a.success > max_result:
-                max_result = a.success
-                best_alpha = alpha
-                best_gamma = gamma
-                print max_result, alpha, gamma
-
-    print 'best success rate:',max_result, ' alpha: ', best_alpha, ' gamma: ', best_gamma
-    #import matplotlib.pyplot as plt
-    #plt.plot(a.red_light_violations, label='red light violations', color='r')
-    #plt.plot(a.planner_noncompliance, label = 'planner noncompliance', color='b')
-    #plt.legend()
-    #plt.xlabel('Trials')
-    #plt.title('Q-Learning, with deadline. Success rate %d%%' % a.success)
-    #plt.show()
-    #plt.savefig('QLearningWithDeadline.png')
+        sim.run(n_trials=100)  # run for a specified number of trials
+        # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+      
+        
+        plt.plot(a.red_light_violations, label='red light violations', color='r')
+        plt.plot(a.planner_noncompliance, label = 'planner noncompliance', color='b')
+        plt.legend()
+        plt.xlabel('Trials')
+        plt.title('Enhanced Q-Learning, with deadline. Success rate %d%%' % a.success_rate)
+        y_pos = max(a.red_light_violations + a.planner_noncompliance)*0.8
+        plt.text(50, y_pos, r'$\alpha: %.3f, \gamma: %.3f$' % (a.alpha, a.gamma))
+        #plt.show()
+        
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        plt.savefig('EnhancedQLearningWithDeadline_'+timestr +'_%d_%d.png' % (count, a.success_rate))
+        plt.clf()
 
 
 

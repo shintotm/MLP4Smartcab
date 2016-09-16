@@ -73,7 +73,7 @@ class LearningAgent(Agent):
         self.prevReward = reward
         
 
-        print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        #print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
  
         if self.planner.next_waypoint() == None :
              self.success_rate += 1
@@ -98,21 +98,40 @@ class LearningAgent(Agent):
 
 def run():
     """Run the agent for a finite number of trials."""
+    import time
 
-    # Set up environment and agent
-    e = Environment()  # create environment (also adds some dummy traffic)
-    a = e.create_agent(LearningAgent)  # create agent
-    e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
-    # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
-    # Now simulate it
-    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
-    # NOTE: To speed up simulation, reduce update_delay and/or set display=False
+    success_rates = []
+    last20_redlight_violations = []
+    last20_planner_noncompliance = []
+    for count in range(10):
+        # Set up environment and agent
+        e = Environment()  # create environment (also adds some dummy traffic)
+        a = e.create_agent(LearningAgent)  # create agent
+        e.set_primary_agent(a, enforce_deadline=True)  # specify agent to track
+        # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
-    sim.run(n_trials=100)  # run for a specified number of trials
-    # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-    #plot_agent_performance(a.alpha, a.gamma,a.success_rate, a.red_light_violations, a.planner_noncompliance, count)
+        # Now simulate it
+        sim = Simulator(e, update_delay=0.0000005, display=False)  # create simulator (uses pygame when display=True, if available)
+        # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
+        sim.run(n_trials=100)  # run for a specified number of trials
+        # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
+        #plot_agent_performance(a.alpha, a.gamma,a.success_rate, a.red_light_violations, a.planner_noncompliance, count)
+        
+        sum_last20_redlight_violations = sum(a.red_light_violations[-20:])
+        sum_last20_planner_noncompliance = sum(a.planner_noncompliance[-20:])
+        
+        success_rates.append(a.success_rate)
+        last20_redlight_violations.append(sum_last20_redlight_violations)
+        last20_planner_noncompliance.append(sum_last20_planner_noncompliance)
+        
+    mean_success = sum(success_rates)/float(len(success_rates))
+    mean_last20redlight = sum(last20_redlight_violations)/float(len(last20_redlight_violations))
+    mean_last20planner = sum(last20_planner_noncompliance)/float(len(last20_planner_noncompliance)) 
+    print 'Mean success rate: ', mean_success
+    print 'Mean last 20 red light violationse: ', mean_last20redlight
+    print 'Mean last 20 planner_noncompliance: ', mean_last20planner
 
      
 def plot_agent_performance(alpha, gamma, success_rate, red_light_violations, planner_noncompliance, count):
